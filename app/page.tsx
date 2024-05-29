@@ -1,7 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { collection, addDoc, getDoc, QuerySnapshot, query, onSnapshot, DocumentData, deleteDoc, doc } from "firebase/firestore";
-import { db } from '../lib/firebase'
+import { auth, db } from '../lib/firebase'
+import toast from 'react-hot-toast';
+import { useRouter } from "next/navigation";
 
 interface Item {
   name: string;
@@ -14,6 +16,17 @@ const Home: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [newItem, setNewItem] = useState<Item>({ name: '', price: '', id: '', color: '#E3E3E3' }); // Initialize color here
   const [total, setTotal] = useState<number>(0);
+  const router = useRouter();
+
+  const checkAuthentication = () => {
+    if (!auth.currentUser) {
+      router.push('/login');
+    }
+  };
+
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
 
   const addItem = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,7 +37,9 @@ const Home: React.FC = () => {
         color: newItem.color 
       });
       setNewItem({ name: '', price: '', id: '', color: generateRandomColor() }); // Generate random color for new item
-    }
+      toast.success('Expense successfully added!')
+    }else{
+      toast.error('Please enter a name and price')}
   }
 
   useEffect(() => {
@@ -51,6 +66,7 @@ const Home: React.FC = () => {
 
   const deleteItem = async (id: string) => {
     await deleteDoc(doc(db, 'items', id))
+    toast.success('Expense successfully removed!')
   }
 
   const generateRandomColor = () => {
